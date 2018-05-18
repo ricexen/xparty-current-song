@@ -1,5 +1,14 @@
 extends base
 
+append styles
+  link(type='stylesheet', href='/stylesheets/current-song.css')
+
 block content
-  h1= title
-  p Welcome to #{title}
+  .container
+    h1.center x-party
+    .row
+      a(href='/current-song').btn.col.s4.offset-s4
+        span Current Song
+    .row
+      a(href='http://localhost:8000').btn.col.s4.offset-s4
+        span Games
