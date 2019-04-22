@@ -3,9 +3,11 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node ./bin/www"
+    "start": "node ./bin/www",
+    "dev": "./node_modules/nodemon/bin/nodemon.js ./bin/www --inspect *"
   },
   "dependencies": {
+    "axios": "^0.18.0",
     "cookie-parser": "~1.4.3",
     "debug": "~2.6.9",
     "dotenv": "^5.0.1",
@@ -15,6 +17,11 @@
     "morgan": "~1.9.0",
     "node-sass-middleware": "0.11.0",
     "pug": "2.0.0-beta11",
-    "youtube-api-v3-search": "^1.0.2"
+    "request": "^2.88.0",
+    "spotify-web-api-js": "^1.2.0",
+    "youtube-api-v3-search": "^1.2.1"
+  },
+  "devDependencies": {
+    "nodemon": "^1.18.11"
   }
 }

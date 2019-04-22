@@ -7,6 +7,7 @@ router.get('/', function(req, res, next) {
   res.render('index', { title: 'x-party' });
 });
 
-router.get('/current-song', current_song_controller.currentSong)
+router.get('/current-song', current_song_controller.currentSong);
+router.get('/auth', current_song_controller.auth);
 
 module.exports = router;
