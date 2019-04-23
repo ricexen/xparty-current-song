@@ -1,10 +1,11 @@
 const request = require('request');
 const axios = require('axios');
+const googleapis = require('googleapis');
 const connection = require('../config/connection');
 
 const searchTerm = (currentSong) => {
-  const { artist, songName } = currentSong;
-  return `${artist} ${artist} music video official animation`;
+  const { artist, song } = currentSong;
+  return `${artist} ${song} music video official`;
 }
 
 const currentSong = (access_token) => {
@@ -25,6 +26,19 @@ const currentSong = (access_token) => {
   })
 }
 
+const videoURL = (currentSong) => {
+  const part = searchTerm(currentSong);
+  const { key } = connection.youtube;
+  const url = `https://www.googleapis.com/youtube/v3/search?key=${key}&part=snippet&q=${encodeURIComponent(part)}`;
+  return new Promise((resolve, reject) => {
+    request.get(url, {}, (error, response, body) => {
+      const json = JSON.parse(body);
+      if (error || response.statusCode !== 200) reject(json);
+      else resolve(json);
+    });
+  })
+}
+
 const objectToRawParams = (object) => {
   return Object.keys(object)
     .map(key => [key, object[key]])
@@ -34,10 +48,10 @@ const objectToRawParams = (object) => {
 
 module.exports = {
   currentSong(req, res) {
-    const { code } = req.query;
-    if (!code) {
+    const { code, spotify_access_token } = req.query;
+    if (!spotify_access_token && !code) {
       res.redirect('/auth');
-    } else {
+    } else if (!spotify_access_token) {
       const credentials = `${connection.spotify.id}:${connection.spotify.secret}`;
       request.post(
         'https://accounts.spotify.com/api/token', {
@@ -54,15 +68,22 @@ module.exports = {
           const { access_token } = JSON.parse(body);
           if (!access_token) res.redirect('/auth');
           else {
-            currentSong(access_token).then(song => {
-              res.render('current-song', {
-                title: song.full,
-                videoURL: 'https://www.youtube.com/embed/_2DkJjBiCWY?rel=0&autoplay=1&amp;showinfo=0&vq=hd1080&mute=1'
-              });
-            });
+            const params = objectToRawParams({ spotify_access_token: access_token });
+            res.redirect(`/current-song?${params}`);
           }
         }
       );
+    } else {
+      currentSong(spotify_access_token)
+        .then(song => {
+          videoURL(song).then(result => {
+            const { items: [{ id: { videoId } }] } = result;
+            res.render('current-song', {
+              title: song.full,
+              videoURL: `https://www.youtube.com/embed/${videoId}?rel=0&autoplay=1&amp;showinfo=0&vq=hd1080&mute=1`
+            });
+          })
+        });
     }
   },
 
