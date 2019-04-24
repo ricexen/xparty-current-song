@@ -80,7 +80,6 @@ module.exports = {
     } else if (spotify_access_token) {
       currentSong(spotify_access_token)
         .then(song => {
-          console.log(song);
           YoutubeVideoSearch(song)
             .then(result => {
               const items = result.items.filter(item => item.id.kind.includes('video'));
