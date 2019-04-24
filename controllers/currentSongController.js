@@ -17,7 +17,7 @@ const currentSong = (access_token) => {
         Authorization: `Bearer ${access_token}`
       }
     }, (error, response, body) => {
-      if (error || response.statusCode !== 200) reject(error);
+      if (error) reject(error);
       else if (!body) reject({ currentSong: 'Nothing Playing' });
       else {
         const { item: { name: song, artists: [{ name: artist }] } } = JSON.parse(body);
@@ -52,7 +52,7 @@ module.exports = {
     const { code, spotify_access_token } = req.query;
     if (!spotify_access_token && !code) {
       res.redirect('/auth');
-    } else if (!spotify_access_token) {
+    } else if (code) {
       const credentials = `${connection.spotify.id}:${connection.spotify.secret}`;
       request.post(
         'https://accounts.spotify.com/api/token', {
@@ -74,18 +74,26 @@ module.exports = {
           }
         }
       );
-    } else {
+    } else if (spotify_access_token) {
       currentSong(spotify_access_token)
         .then(song => {
-          YoutubeVideoSearch(song).then(result => {
-            const items = result.items.filter(item => item.id.kind.includes('video'));
-            const [{ id: { videoId } }] = items;
-            res.render('current-song', {
-              title: song.full,
-              videoURL: `https://www.youtube.com/embed/${videoId}?rel=0&autoplay=1&amp;showinfo=0&vq=hd1080&mute=1`
-            });
-          })
-        });
+          YoutubeVideoSearch(song)
+            .then(result => {
+              const items = result.items.filter(item => item.id.kind.includes('video'));
+              const [{ id: { videoId } }] = items;
+              res.render('current-song', {
+                title: song.full,
+                videoURL: `https://www.youtube.com/embed/${videoId}?rel=0&autoplay=1&amp;showinfo=0&vq=hd1080&mute=1`
+              });
+            })
+            .catch(error => res.redirect('/auth'));
+        })
+        .catch(error => res.render('current-song', {
+          title: error.currentSong,
+          videoURL: `https://www.youtube.com/embed/`
+        }));
+    } else {
+      res.redirect('/auth');
     }
   },
 
