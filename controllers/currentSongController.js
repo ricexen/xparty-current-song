@@ -20,8 +20,11 @@ const currentSong = (access_token) => {
       if (error) reject(error);
       else if (!body) reject({ currentSong: 'Nothing Playing' });
       else {
-        const { item: { name: song, artists: [{ name: artist }] } } = JSON.parse(body);
-        resolve({ song, artist, full: `${artist} - ${song}` });
+        const json = JSON.parse(body);
+        const { item: { name: song, artists: [{ name: artist }] } } = json;
+        let { progress_ms: progress } = json;
+        progress = Number(Math.floor(progress / 1000).toFixed(0)) + 1;
+        resolve({ song, artist, full: `${artist} - ${song}`, progress });
       }
     });
   })
@@ -77,13 +80,14 @@ module.exports = {
     } else if (spotify_access_token) {
       currentSong(spotify_access_token)
         .then(song => {
+          console.log(song);
           YoutubeVideoSearch(song)
             .then(result => {
               const items = result.items.filter(item => item.id.kind.includes('video'));
               const [{ id: { videoId } }] = items;
               res.render('current-song', {
                 title: song.full,
-                videoURL: `https://www.youtube.com/embed/${videoId}?rel=0&autoplay=1&amp;showinfo=0&vq=hd1080&mute=1`
+                videoURL: `https://www.youtube.com/embed/${videoId}?rel=0&autoplay=1&amp;showinfo=0&vq=hd1080&mute=1&start=${song.progress}`
               });
             })
             .catch(error => res.redirect('/auth'));
