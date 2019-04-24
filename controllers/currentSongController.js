@@ -27,7 +27,7 @@ const currentSong = (access_token) => {
   })
 }
 
-const YoutubeVideo = (currentSong) => {
+const YoutubeVideoSearch = (currentSong) => {
   const part = searchTerm(currentSong);
   const { key } = connection.youtube;
   const url = `https://www.googleapis.com/youtube/v3/search?key=${key}&part=snippet&q=${encodeURIComponent(part)}`;
@@ -77,7 +77,7 @@ module.exports = {
     } else {
       currentSong(spotify_access_token)
         .then(song => {
-          YoutubeVideo(song).then(result => {
+          YoutubeVideoSearch(song).then(result => {
             const items = result.items.filter(item => item.id.kind.includes('video'));
             const [{ id: { videoId } }] = items;
             res.render('current-song', {
